@@ -5,7 +5,7 @@ print("Starting bot.")
 
 if os.path.exists(".env"):
 
-    print("Loading .env file.")
+    print("Loading variables from .env file.")
 
     load_dotenv()
 
@@ -18,6 +18,8 @@ elif "BOT_API" in os.environ:
     BOT_API = os.environ["BOT_API"]
 
 else:
-    print('No .env file found, and no environment variables set. Extiting.')
+    
+    print('No .env file found, and no environment variables set. Exiting.')
+
     exit(1)
 
