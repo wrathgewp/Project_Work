@@ -19,7 +19,7 @@ elif "BOT_API" in os.environ:
 
 else:
     
-    print('No .env file found, and no environment variables set. Exiting.')
+    print("No .env file found, and no environment variables set. Exiting.")
 
     exit(1)
 
