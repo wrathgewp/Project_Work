@@ -1,2 +1,2 @@
 # Project_Work
-Telegram bot for understand work's contract
+Telegram bot to understand employment contracts
