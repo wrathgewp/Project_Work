@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes
 import pymysql
 from pymysql.err import MySQLError
+import sql
 
 print("Starting bot.")
 
@@ -17,14 +18,22 @@ if os.path.exists(".env"):
     load_dotenv() ## Load the env file
 
     BOT_API = os.environ["BOT_API"] ## Set the BOT_API variable from the env file
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
 
-elif "BOT_API" in os.environ:
+elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.environ and "PASS_DB" in os.environ and "DB_NAME" in os.environ:
     
     ## Check if the BOT_API variable is in the environment variables of the OS / Docker Image
 
     print("No .env file found, using environment variables.")
 
     BOT_API = os.environ["BOT_API"]
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
 
 else:
 
@@ -32,7 +41,7 @@ else:
     
     print("No .env file found, and no environment variables set. Exiting.")
 
-    exit(1)
+    exit(1) 
 
 
 ## ---------Telegram API code----------
