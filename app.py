@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+import pymysql
+from pymysql.err import MySQLError
 
 print("Starting bot.")
 
