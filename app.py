@@ -69,12 +69,10 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_API).build()
 
     start_handler = CommandHandler('start', start)
-    echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), echo)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
     application.add_handler(start_handler)
     application.add_handler(unknown_handler)
-    application.add_handler(echo_handler)
     
     application.run_polling()
 
