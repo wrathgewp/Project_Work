@@ -37,7 +37,7 @@ elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.env
 
 else:
 
-    ## Exiting if the BOT_API variable is not set and there is no .env file
+    ## Exiting if the envronment variables are not set and there is no .env file
     
     print("No .env file found, and no environment variables set. Exiting.")
 
@@ -46,19 +46,24 @@ else:
 
 ## ---------Telegram API code----------
 
+## The following code activate logging to allow debugging
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+## The following code will be executed when the bot is started
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Hi, i am the IFTS ProjectWork bot!")
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+## The following code will be executed when the bot receives an unkown command
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
+
+## The following code will be executed when the bot receives a message
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_API).build()
