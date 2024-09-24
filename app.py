@@ -156,7 +156,7 @@ def format_articles(articles):
     return formatted_message if formatted_message else "Nessun articolo trovato."
 
 
-## The following function retrieves articles and link from the database
+## The following function retrieves articles and links from the database
 
 def get_articles():
     if connection:
@@ -175,7 +175,7 @@ def get_articles():
     else:
         return None
     
-# Handler for the /articles command
+# Function for the /articles command
 async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Call the function that retrieves the articles from the database
     articles = get_articles()
@@ -193,6 +193,33 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=formatted_message, 
         parse_mode='Markdown'  # Use Markdown to format the article titles in bold
     )
+
+
+## The following code will be executed when a file is uploaded by a user
+
+async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    document = update.message.document
+    
+    if document is not None:
+        file_id = document.file_id
+        
+        # Get the file from Telegram servers
+        file = await context.bot.get_file(file_id)
+        
+        # Directory where files will be saved in the container
+        download_dir = "/app/downloads/"  # This path matches the container directory
+        file_path = os.path.join(download_dir, document.file_name)
+        
+        # Download the file to the mapped volume
+        await file.download_to_drive(file_path)
+        
+        await update.message.reply_text(f"File '{document.file_name}' received and downloaded. Processing...")
+        
+        # You can now process the file at file_path
+        #process_file(file_path)
+        
+        # Optionally, remove the file after processing
+        os.remove(file_path)
 
 ## The following code will be executed when the bot receives a message
 
