@@ -14,9 +14,11 @@ connection = pymysql.connect(host=HOST_DB,
                              password=PASSWORD_DB,
                              database=DATABASE,
                              cursorclass=pymysql.cursors.DictCursor)
-
-def prova():
+        
+def get_dizionario(language_code):
+    table_name = f"dizionario_{language_code}"
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM dizionario_it")
+        query = f"SELECT * FROM {table_name}" 
+        cursor.execute(query)
         result = cursor.fetchall()
-        print (result)
+        return result
