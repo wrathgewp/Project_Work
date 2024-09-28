@@ -24,6 +24,7 @@ if os.path.exists(".env"):
     USER_DB = os.environ["USER_DB"]
     PASSWORD_DB = os.environ["PASSWORD_DB"]
     DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
 
 elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.environ and "PASS_DB" in os.environ and "DB_NAME" in os.environ:
     
@@ -36,6 +37,7 @@ elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.env
     USER_DB = os.environ["USER_DB"]
     PASSWORD_DB = os.environ["PASSWORD_DB"]
     DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
 
 else:
 
