@@ -10,6 +10,9 @@ WORKDIR /usr/app/telegram_bot
 
 COPY ./* ./
 
+# Create the directory for downloaded files
+RUN mkdir -p /app/downloads
+
 ## This will install all the dependencies
 
 RUN pip install --no-cache-dir -r requirements.txt

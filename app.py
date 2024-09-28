@@ -19,22 +19,14 @@ if os.path.exists(".env"):
     load_dotenv() ## Load the env file
  
     BOT_API = os.environ["BOT_API"] ## Set the BOT_API variable from the env file
-    HOST_DB = os.environ["HOST_DB"]
-    USER_DB = os.environ["USER_DB"]
-    PASSWORD_DB = os.environ["PASSWORD_DB"]
-    DATABASE = os.environ["DATABASE"]
 
-elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.environ and "PASS_DB" in os.environ and "DB_NAME" in os.environ:
+elif "BOT_API" in os.environ:
     
     ## Check if the BOT_API variable is in the environment variables of the OS / Docker Image
 
     print("No .env file found, using environment variables.")
 
     BOT_API = os.environ["BOT_API"]
-    HOST_DB = os.environ["HOST_DB"]
-    USER_DB = os.environ["USER_DB"]
-    PASSWORD_DB = os.environ["PASSWORD_DB"]
-    DATABASE = os.environ["DATABASE"]
 
 else:
 
@@ -171,6 +163,32 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
+
+## The following code will be executed when a file is uploaded by a user
+
+async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    document = update.message.document
+    
+    if document is not None:
+        file_id = document.file_id
+        
+        # Get the file from Telegram servers
+        file = await context.bot.get_file(file_id)
+        
+        # Directory where files will be saved in the container
+        download_dir = "/app/downloads/"  # This path matches the container directory
+        file_path = os.path.join(download_dir, document.file_name)
+        
+        # Download the file to the mapped volume
+        await file.download_to_drive(file_path)
+        
+        await update.message.reply_text(f"File '{document.file_name}' received and downloaded. Processing...")
+        
+        # You can now process the file at file_path
+        #process_file(file_path)
+        
+        # Optionally, remove the file after processing
+        os.remove(file_path)
 
 ## The following code will be executed when the bot receives a message
 
