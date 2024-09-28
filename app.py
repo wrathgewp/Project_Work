@@ -21,7 +21,7 @@ if os.path.exists(".env"):
 
     BOT_API = os.environ["BOT_API"] ## Set the BOT_API variable from the env file
 
-elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.environ and "PASS_DB" in os.environ and "DB_NAME" in os.environ:
+elif "BOT_API" in os.environ and "HOST_DB" in os.environ and "USER_DB" in os.environ and "PASS_DB" in os.environ and "DB_NAME" in os.environ and "PORT" in os.environ:
     
     ## Check if the BOT_API variable is in the environment variables of the OS / Docker Image
 
