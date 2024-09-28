@@ -25,4 +25,4 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: user/app:latest
+          tags: wrathgewp/project_work:latest
