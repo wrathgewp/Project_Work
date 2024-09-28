@@ -5,9 +5,8 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes, Updater, CallbackQueryHandler
 import pymysql
-from pymysql.err import MySQLError
 import sql
-from sql import get_dizionario
+from sql import get_articles
 
 print("Starting bot.")
 
@@ -18,7 +17,7 @@ if os.path.exists(".env"):
     print("Loading variables from .env file.")
 
     load_dotenv() ## Load the env file
-
+ 
     BOT_API = os.environ["BOT_API"] ## Set the BOT_API variable from the env file
 
 elif "BOT_API" in os.environ:
@@ -44,7 +43,7 @@ else:
 ## Dictionary for the languages
 messages = {
     "ita": {
-        "welcome": "Benvenutə!",
+        "welcome": "Benvenutə! Seleziona la tua lingua.",
         "language_selected": " 🇮🇹 Lingua italiana impostata, benvenutə!",
         "functionalities": "Ciao questo bot può aiutarti nelle seguenti cose: \n\n"
         "1️⃣ Puoi cercare una parola che non ti è comprensibile nel tuo contratto e ti dirà la sua definizione; \n\n"
@@ -52,7 +51,7 @@ messages = {
         "3️⃣ Ti mette a disposizione articoli e link utili per aiutarti a risolvere i tuoi dubbi!",
     },
     "eng": {
-        "welcome": "Welcome!",
+        "welcome": "Welcome! Please select your language.",
         "language_selected": " 🇬🇧 English language selected, welcome!",
         "functionalities": "Hello this bot can help you with the following things: \n\n"
         "1️⃣ You can search for a word that you don't understand in your contract and it will tell you its definition; \n\n"
@@ -79,9 +78,8 @@ user_language = "eng" ##Default language
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ## Buttons creation
-    ita = InlineKeyboardButton("🇮🇹", callback_data='ita')
-    eng = InlineKeyboardButton("🇬🇧", callback_data='eng')
-    
+    ita = InlineKeyboardButton("🇮🇹", callback_data='lang_ita')
+    eng = InlineKeyboardButton("🇬🇧", callback_data='lang_eng')    
     ## InlineKeyboardMarkup creation
     keyboard = [[ita, eng]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -92,27 +90,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     
-## The following code will be executed when the bot receives a callback query
+## Function to handle language selection
 
 async def language_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_language
     query = update.callback_query
     await query.answer()
+    if query.data.startswith("lang_"):
+        user_language = get_user_language(query.data.split("_")[1])
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["language_selected"])
+        await functionalities_keyboard(update, context)
+    else: 
+        return
+## The following code is a function that display the functionalities keyboard
 
-    user_language = get_user_language(query.data)
-    dictionary = get_dizionario(user_language)
-    
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["language_selected"])
-    
-    await functionalities_keyboard(update, context)
-    
-    return dictionary
-
-## The following code will be executed when the bot receives a message
 async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     words_btn = InlineKeyboardButton("🔎", callback_data='words')
     unions_btn = InlineKeyboardButton("👥", callback_data='unions')
-    links_btn = InlineKeyboardButton("🔗", callback_data='link')
+    links_btn = InlineKeyboardButton("🔗", callback_data='links')
     keyboard_btn = [[words_btn, unions_btn, links_btn]]
     reply_markup = InlineKeyboardMarkup(keyboard_btn)
 
@@ -121,14 +116,17 @@ async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT
         text=messages[user_language]["functionalities"],
         reply_markup=reply_markup
     )
-    
-## The following code will be executed when the bot receives an unkown command
+      
+## Function to handle "links" button
+async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()    
+    if query.data == 'links':
+        await articles(update, context)
+    else: 
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
 
-async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
-
-## Format Articles function
-
+## Function to format articles
 def format_articles(articles):
     # Initialize an empty string to build the message
     formatted_message = ""
@@ -136,38 +134,13 @@ def format_articles(articles):
     # Loop through each article in the list
     for article in articles:
         # Assume that the articles have 'title' and 'content' fields'
-        title = article.get('link', 'Titolo non disponibile')
-        content = article.get('descrizione_link', 'Contenuto non disponibile')
-        
-        # Add each article to the formatted message
-        formatted_message += f"📌 *{title}*\n"
-        formatted_message += f"{content[:100]}...\n"  # Mostra i primi 100 caratteri del contenuto
-        formatted_message += "\n"
-
+        link = article.get('link', 'link non disponibile')
+        formatted_message += f"🔗 [{link}]({link})\n\n"
     # If there are no articles, return a default message
     return formatted_message if formatted_message else "Nessun articolo trovato."
 
-
-## The following function retrieves articles and links from the database
-
-def get_articles():
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                # Query to select articles from the table, modify link_utili with the correct table name
-                sql_query = "SELECT * FROM link_utili"
-                cursor.execute(sql_query)
-                # Retrieve all results of the query
-                results = cursor.fetchall()
-                return results
-        except MySQLError as e:
-            logging.error(f"Errore nell'esecuzione della query: {e}")
-            return None
-        # The connection remains open as it is global in the sql.py module; do not close it here
-    else:
-        return None
-    
-# Function for the /articles command
+ 
+# Handler for articles button
 async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Call the function that retrieves the articles from the database
     articles = get_articles()
@@ -186,6 +159,10 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'  # Use Markdown to format the article titles in bold
     )
 
+## The following code will be executed when the bot receives an unkown command
+
+async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
 
 ## The following code will be executed when a file is uploaded by a user
 
@@ -219,14 +196,14 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_API).build()
 
     start_handler = CommandHandler('start', start)
-    button_handler = CallbackQueryHandler(language_button)
-    articles_handler = CommandHandler('articles', articles)
+    button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
+    functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
 
     application.add_handler(start_handler)
     application.add_handler(button_handler)
-    application.add_handler(articles_handler)
+    application.add_handler(functionalities_handler)
     application.add_handler(unknown_handler)
     
     application.run_polling()
