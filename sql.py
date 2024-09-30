@@ -1,16 +1,26 @@
 import logging
+import traceback
 from pymysql import MySQLError
 import pymysql.cursors
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-BOT_API = os.environ["BOT_API"]
-HOST_DB = os.environ["HOST_DB"]
-USER_DB = os.environ["USER_DB"]
-PASSWORD_DB = os.environ["PASSWORD_DB"]
-DATABASE = os.environ["DATABASE"]
-PORT = os.environ["PORT"]
+if os.path.exists(".env"):
+    
+    load_dotenv()
+
+elif "HOST_DB" in os.environ:
+
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
+
+else:
+    print("No .env file found, and no environment variables set for database. Exiting.")
+    exit(1)
+
 
 connection = pymysql.connect(host=HOST_DB,
                              user=USER_DB,
@@ -43,7 +53,9 @@ def get_articles():
                 return results
         except MySQLError as e:
             logging.error(f"Errore nell'esecuzione della query: {e}")
+            logging.error(traceback.format_exc())
             return None
         # The connection remains open as it is global in the sql.py module; do not close it here
     else:
+        logging.error("Connessione al database non disponibile.")
         return None
