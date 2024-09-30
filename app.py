@@ -49,6 +49,10 @@ messages = {
         "1️⃣ Puoi cercare una parola che non ti è comprensibile nel tuo contratto e ti dirà la sua definizione; \n\n"
         "2️⃣ Ti dirà i sindacati e i patronati localizzati a Verona e nella sua provincia; \n\n"
         "3️⃣ Ti mette a disposizione articoli e link utili per aiutarti a risolvere i tuoi dubbi!",
+        "intro_dictionary": "Ciao, per favore inserisci la parola che non capisci:",
+        "error_dictionary": "Parola non trovata nel dizionario :/",
+        "intro_articles": "Ecco gli articoli disponibili: \n\n",
+        "error_articles": "Articoli non disponibili",
     },
     "eng": {
         "welcome": "Welcome! Please select your language.",
@@ -57,6 +61,10 @@ messages = {
         "1️⃣ You can search for a word that you don't understand in your contract and it will tell you its definition; \n\n"
         "2️⃣ It will tell you the unions and patronages located in Verona and in its province; \n\n"
         "3️⃣ It will put at your disposal articles and links to help you solve your doubts!",
+        "intro_dictionary": "Hi, please enter the word you don't understand:",
+        "error_dictionary":"Word not found :/",
+        "intro_articles": "Here are the available article: \n\n",
+        "error_articles": "Articles not available",
     }
 }
 
@@ -128,16 +136,17 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ## Function to format articles
 def format_articles(articles):
-    # Initialize an empty string to build the message
-    formatted_message = ""
-
+    if not articles:
+        return messages[user_language]["error_articles"]
+    
+    text=messages[user_language]["intro_articles"] 
     # Loop through each article in the list
     for article in articles:
         # Assume that the articles have 'title' and 'content' fields'
         link = article.get('link', 'link non disponibile')
-        formatted_message += f"🔗 [{link}]({link})\n\n"
+        text += f"🔗 [{link}]({link})\n\n"
     # If there are no articles, return a default message
-    return formatted_message if formatted_message else "Nessun articolo trovato."
+    return text
 
  
 # Handler for articles button

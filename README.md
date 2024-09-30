@@ -19,8 +19,8 @@ The entire project is containerized using Docker, ensuring easy deployment and s
 - **User Uploads**: Users can upload contract documents directly through the Telegram bot.
 - **Text Extraction**: The bot reads and processes the text from the uploaded file.
 - **Term Matching**: Extracted words from the contract are matched against pre-defined lists of terms stored in two separate MariaDB tables (`dizionario_it` and `dizionario_en`).
-  - **`dizionario_it`**: Contains Italian terms and their definitions in Italian.
-  - **`dizionario_en`**: Contains Italian terms and their definitions in English.
+  - **`dizionario_ita`**: Contains Italian terms and their definitions in Italian.
+  - **`dizionario_eng`**: Contains Italian terms and their definitions in English.
 - **Dictionary Access**: Users can query the dictionary directly, without uploading any files.
 - **Useful Links**: The bot can provide links to articles or websites relevant to the user's inquiries.
 - **Labor Unions and Patronati Offices**: The bot can display a list of **sindacati** (labor unions) and **patronati** (social support offices) located in the city of Verona.
