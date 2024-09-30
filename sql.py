@@ -6,8 +6,13 @@ import os
 from dotenv import load_dotenv
 
 if os.path.exists(".env"):
-    
+
     load_dotenv()
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
 
 elif "HOST_DB" in os.environ:
 
