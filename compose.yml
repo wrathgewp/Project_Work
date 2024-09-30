@@ -1,0 +1,32 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: INSERT_THE_ROOT_PASSWORD_HERE
+      MYSQL_DATABASE: INSERT_THE_DATABASE_HERE
+      MYSQL_USER: INSERT_THE_USER_HERE
+      MYSQL_PASSWORD: INSERT_THE_PASSWORD_HERE
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  python:
+    image: wrathgewp/project_work:latest
+    container_name: python-app
+    depends_on:
+      - mariadb
+    environment:
+      BOT_API: INSERT_YOUR_API_KEY_HERE
+      HOST_DB: mariadb
+      USER_DB: INSERT_THE_USER_HERE
+      PASSWORD_DB: INSERT_THE_PASSWORD_HERE
+      DATABASE: INSERT_THE_DATABASE_HERE
+      PORT: 3306
+    links:
+      - mariadb
+
+volumes:
+  mariadb_data:
