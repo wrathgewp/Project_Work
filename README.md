@@ -108,9 +108,9 @@ Once the bot is running, you can interact with it through Telegram by sending `/
 
 ## Usage
 
-### Commands
+### Functions
 
-W.I.P.
+W.I.P. /comuni  /syndicates
 
 ### Supported Languages
 
