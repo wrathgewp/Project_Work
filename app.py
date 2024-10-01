@@ -67,6 +67,8 @@ messages = {
         "meaning": "Here is the meaning of the word you entered:\n\n",
         "no_word": "I didn't find any word that matches the one you entered.",
         "nocommand": "Sorry, I didn't understand that command.",
+        "intro_articles": "Here are the avaible artcles: \n\n",
+        "error_articles": "Articles not available",
     }
 }
 
