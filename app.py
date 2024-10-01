@@ -49,6 +49,10 @@ messages = {
         "1️⃣ Puoi cercare una parola che non ti è comprensibile nel tuo contratto e ti dirà la sua definizione; \n\n"
         "2️⃣ Ti dirà i sindacati e i patronati localizzati a Verona e nella sua provincia; \n\n"
         "3️⃣ Ti mette a disposizione articoli e link utili per aiutarti a risolvere i tuoi dubbi!",
+        "word_definition_ask": "Inserisci la parola che vuoi cercare:",
+        "meaning": "Ecco il significato della parola che hai inserito:\n\n",
+        "no_word": "Non ho trovato nessuna parola che corrisponda a quella che hai inserito.",
+        "nocommand": "Scusami, non ho capito il comando che hai inserito.",
     },
     "eng": {
         "welcome": "Welcome! Please select your language.",
@@ -57,6 +61,10 @@ messages = {
         "1️⃣ You can search for a word that you don't understand in your contract and it will tell you its definition; \n\n"
         "2️⃣ It will tell you the unions and patronages located in Verona and in its province; \n\n"
         "3️⃣ It will put at your disposal articles and links to help you solve your doubts!",
+        "word_definition_ask": "Enter the word you want to search:",
+        "meaning": "Here is the meaning of the word you entered:\n\n",
+        "no_word": "I didn't find any word that matches the one you entered.",
+        "nocommand": "Sorry, I didn't understand that command.",
     }
 }
 
@@ -102,6 +110,7 @@ async def language_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await functionalities_keyboard(update, context)
     else: 
         return
+
 ## The following code is a function that display the functionalities keyboard
 
 async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -162,7 +171,7 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ## The following code will be executed when the bot receives an unkown command
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["nocommand"])
 
 ## The following code will be executed when a file is uploaded by a user
 
@@ -190,6 +199,39 @@ async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Optionally, remove the file after processing
         os.remove(file_path)
 
+
+"""
+
+Handles the /word_definition command
+and the user's input of a word to get its definition.
+
+When the /word_definition command is received,
+the bot sends a message asking the user to send a word.
+The `word_definition` function sets a flag in the user's data
+to indicate that the bot is waiting for a word input.
+
+When the user sends a word, the `handle_word_input` function checks
+if the bot is waiting for a word input.
+If so, it retrieves the definition of the word from the database
+ and sends a message back to the user with the definition.
+
+"""
+async def word_definition(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["word_definition_ask"])
+    context.user_data['waiting_for_word'] = True
+
+async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.user_data.get('waiting_for_word'):
+        word = update.message.text
+        definition = sql.get_word_definition(user_language, word)
+        if definition and isinstance(definition, list):
+            formatted_definition = "\n".join([f"{item['parola']}: {item['descrizione']}" for item in definition])
+            message = messages[user_language]["meaning"] + formatted_definition
+        else:
+            message = messages[user_language]["no_word"]
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+        context.user_data['waiting_for_word'] = False
+    
 ## The following code will be executed when the bot receives a message
 
 if __name__ == '__main__':
@@ -198,12 +240,16 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start)
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
     functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
+    word_definition_handler = CommandHandler('word_definition', word_definition)
+    word_input_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_word_input)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
 
     application.add_handler(start_handler)
     application.add_handler(button_handler)
     application.add_handler(functionalities_handler)
+    application.add_handler(word_definition_handler)
+    application.add_handler(word_input_handler)
     application.add_handler(unknown_handler)
     
     application.run_polling()

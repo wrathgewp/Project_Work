@@ -36,13 +36,19 @@ connection = pymysql.connect(host=HOST_DB,
 
 ## The following function retrieves the definition of a word from the database
         
-""" def get_dizionario(language_code):
+def get_word_definition(language_code, parola):
     table_name = f"dizionario_{language_code}"
+    parola = f"%{parola}%"
     with connection.cursor() as cursor:
-        query = f"SELECT parola, descrizione FROM {table_name} WHERE parola LIKE {parola}" 
-        cursor.execute(query)
+        query = f"SELECT parola, descrizione FROM {table_name} WHERE LOWER(parola) LIKE LOWER(%s)"
+        cursor.execute(query, (parola,))
         result = cursor.fetchall()
-        return result """
+        
+        if result:
+            return result
+        else:
+            return None
+
     
 ## The following function retrieves articles and link from the database
 
