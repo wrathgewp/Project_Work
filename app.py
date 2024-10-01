@@ -53,6 +53,8 @@ messages = {
         "meaning": "Ecco il significato della parola che hai inserito:\n\n",
         "no_word": "Non ho trovato nessuna parola che corrisponda a quella che hai inserito.",
         "nocommand": "Scusami, non ho capito il comando che hai inserito.",
+        "intro_articles": "Ecco gli articoli disponibili: \n\n",
+        "error_articles": "Articoli non disponibili",
     },
     "eng": {
         "welcome": "Welcome! Please select your language.",
@@ -137,16 +139,17 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ## Function to format articles
 def format_articles(articles):
-    # Initialize an empty string to build the message
-    formatted_message = ""
-
+    if not articles:
+        return messages[user_language]["error_articles"]
+    
+    text=messages[user_language]["intro_articles"] 
     # Loop through each article in the list
     for article in articles:
         # Assume that the articles have 'title' and 'content' fields'
         link = article.get('link', 'link non disponibile')
-        formatted_message += f"🔗 [{link}]({link})\n\n"
+        text += f"🔗 [{link}]({link})\n\n"
     # If there are no articles, return a default message
-    return formatted_message if formatted_message else "Nessun articolo trovato."
+    return text
 
  
 # Handler for articles button
