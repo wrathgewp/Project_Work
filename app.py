@@ -237,8 +237,7 @@ def get_database_terms():
         return none
 
 
-# Load the spaCy English model
-nlp = spacy.load('en_core_web_sm')  
+  
 
 # This function splits messages if they are too long
 def split_message(message, max_length=4096):
