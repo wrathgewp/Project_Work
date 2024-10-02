@@ -7,16 +7,6 @@ from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHan
 import pymysql
 import sql
 from sql import get_articles
-from sql import get_dizionario
-import string
-import spacy
-from fuzzywuzzy import fuzz
-from nltk.corpus import wordnet as wn
-import pdfplumber
-import docx
-import mimetypes
-import chardet
-from cryptography.fernet import Fernet
 
 print("Starting bot.")
 
@@ -215,34 +205,6 @@ async def send_long_message(chat_id, text, context):
     parts = split_message(text)
     for part in parts:
         await context.bot.send_message(chat_id=chat_id, text=part, parse_mode='Markdown')
-
-
-# Function to get synonyms using WordNet
-def get_synonyms(word):
-    # static dictionary with some terms (expandable later)
-    custom_synonyms = {
-        "contratto collettivo nazionale di lavoro": {"ccnl", "accordo collettivo", "patto collettivo"},
-        "livelli di inquadramento": {"classificazione del lavoro", "categorie lavorative"},
-        "orario di lavoro": {"turno di lavoro", "tempo di lavoro"},
-        "preavviso": {"notifica", "avviso"},
-        "condizione sospensiva": {"clausola sospensiva"}
-    }
-    
-    # first controls in our custom dictionary
-    term = word.lower()  
-    if term in custom_synonyms:
-        return custom_synonyms[term]
-    
-    # otherwise, uses wordNet library for synonyms
-    synonyms = set()
-    for syn in wn.synsets(term):
-        for lemma in syn.lemmas():
-            synonyms.add(lemma.name().lower())
-    
-    return synonyms
-
-
-
 
 
 ## The following code will be executed when the bot receives an unkown command
