@@ -217,6 +217,40 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'  # Use Markdown to format the article titles in bold
     )
 
+
+## Functions for document upload and processing
+
+# Function to fetch terms from your database
+def get_database_terms():
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                # Query to fetch terms from the definitions table
+                cursor.execute("SELECT parola FROM dizionario_it")
+                result = cursor.fetchall()
+                # Fetch only the 'term' column
+                return [row['parola'] for row in result]
+        except MySQLError as e:
+            logging.error(f"Errore nell'esecuzione della query: {e}")
+            return None
+    else:
+        return none
+
+
+# Load the spaCy English model
+nlp = spacy.load('en_core_web_sm')  
+
+# This function splits messages if they are too long
+def split_message(message, max_length=4096):
+    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+
+# This function handles longer messages
+async def send_long_message(chat_id, text, context):
+    parts = split_message(text)
+    for part in parts:
+        await context.bot.send_message(chat_id=chat_id, text=part, parse_mode='Markdown')
+
+
 ## The following code will be executed when the bot receives an unkown command
 
 @load_language
