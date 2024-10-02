@@ -1,6 +1,5 @@
 chardet==5.1.0
 cryptography==38.0.4
-cryptography.egg==info
 fuzzywuzzy==0.18.0
 nltk==3.8
 pdfplumber==0.11.4
