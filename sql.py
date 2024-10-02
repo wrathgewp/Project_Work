@@ -70,3 +70,11 @@ def get_articles():
     else:
         logging.error("Connessione al database non disponibile.")
         return None
+
+def get_dizionario(language_code):
+    table_name = f"dizionario_{language_code}"
+    with connection.cursor() as cursor:
+        query = f"SELECT * FROM {table_name}" 
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return result
