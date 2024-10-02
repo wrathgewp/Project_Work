@@ -1,4 +1,3 @@
-from sql import connection
 import os
 from dotenv import load_dotenv
 import logging
@@ -6,7 +5,9 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes, Updater, CallbackQueryHandler
 import pymysql
 import sql
-from sql import get_articles
+from functools import wraps
+
+# Inside a command or message handler
 
 print("Starting bot.")
 
@@ -84,15 +85,49 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-user_language = "eng" ##Default language
+## The following code is a function that load the user language from database
+
+async def set_user_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    lang = query.data.split('_')[1]
+    sql.save_user_language(update.effective_chat.id, lang)
+    context.user_data['language'] = lang
+    await query.answer()
+
+
+"""
+    Decorator function that loads the user's language preference from the database and sets the `user_language` global variable before executing the decorated function.
+    
+    This decorator should be applied to any function that needs to access the user's language preference, such as functions that send messages to the user.
+    
+    Args:
+        func (callable): The function to be decorated.
+    
+    Returns:
+        callable: The decorated function that loads the user's language preference before execution.
+    """
+def load_language(func):
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        global user_language
+        user_language = sql.get_user_language(update.effective_chat.id)
+        if not user_language:
+            user_language = "ita"  # Default to Italian if no language is set
+        return await func(update, context)
+    return wrapper
+
 
 ## The following code will be executed when the bot is started
 
+@load_language
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ## Buttons creation
+    global user_language
+    user_language = sql.get_user_language(update.effective_chat.id)
+    
+    # Buttons creation
     ita = InlineKeyboardButton("🇮🇹", callback_data='lang_ita')
     eng = InlineKeyboardButton("🇬🇧", callback_data='lang_eng')    
-    ## InlineKeyboardMarkup creation
+    # InlineKeyboardMarkup creation
     keyboard = [[ita, eng]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -102,14 +137,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     
+    
 ## Function to handle language selection
 
+@load_language
 async def language_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_language
     query = update.callback_query
     await query.answer()
     if query.data.startswith("lang_"):
         user_language = get_user_language(query.data.split("_")[1])
+        
+        # Save the language to the database
+        sql.save_user_language(update.effective_chat.id, user_language)
+        
         await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["language_selected"])
         await functionalities_keyboard(update, context)
     else: 
@@ -117,6 +158,7 @@ async def language_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ## The following code is a function that display the functionalities keyboard
 
+@load_language
 async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     words_btn = InlineKeyboardButton("🔎", callback_data='words')
     unions_btn = InlineKeyboardButton("👥", callback_data='unions')
@@ -130,6 +172,7 @@ async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT
         reply_markup=reply_markup
     )
       
+@load_language
 ## Function to handle "links" button
 async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -139,6 +182,7 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else: 
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
 
+@load_language
 ## Function to format articles
 def format_articles(articles):
     if not articles:
@@ -153,11 +197,11 @@ def format_articles(articles):
     # If there are no articles, return a default message
     return text
 
- 
+@load_language
 # Handler for articles button
 async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Call the function that retrieves the articles from the database
-    articles = get_articles()
+    articles = sql.get_articles()
     
     if articles:
         # Format the message with the results
@@ -175,11 +219,13 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ## The following code will be executed when the bot receives an unkown command
 
+@load_language
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["nocommand"])
 
 ## The following code will be executed when a file is uploaded by a user
 
+@load_language
 async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     document = update.message.document
     
@@ -221,6 +267,8 @@ If so, it retrieves the definition of the word from the database
  and sends a message back to the user with the definition.
 
 """
+
+@load_language
 async def word_definition(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["word_definition_ask"])
     context.user_data['waiting_for_word'] = True
@@ -239,6 +287,7 @@ async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 ## The following code will be executed when the bot receives a message
 
+
 if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_API).build()
 
@@ -255,6 +304,7 @@ if __name__ == '__main__':
     application.add_handler(functionalities_handler)
     application.add_handler(word_definition_handler)
     application.add_handler(word_input_handler)
+    application.add_handler(CallbackQueryHandler(set_user_language))
     application.add_handler(unknown_handler)
     
     application.run_polling()

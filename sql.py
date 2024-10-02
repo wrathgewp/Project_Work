@@ -70,3 +70,24 @@ def get_articles():
     else:
         logging.error("Connessione al database non disponibile.")
         return None
+
+## The following function retrieves the user language from the database
+
+def get_user_language(chat_id):
+    with connection.cursor() as cursor:
+        query = "SELECT lingua FROM lingua_utente WHERE chat_id = %s"
+        cursor.execute(query, (chat_id,))
+        result = cursor.fetchone()
+        
+        if result:
+            return result['lingua']
+        else:
+            return 'eng'  # Default language if not found
+
+## The following function saves the user language in the database
+
+def save_user_language(chat_id, language):
+    with connection.cursor() as cursor:
+        query = "INSERT INTO lingua_utente (chat_id, lingua) VALUES (%s, %s) ON DUPLICATE KEY UPDATE lingua = %s"
+        cursor.execute(query, (chat_id, language, language))
+    connection.commit()
