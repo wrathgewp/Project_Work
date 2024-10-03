@@ -61,15 +61,15 @@ def get_articles():
                 cursor.execute(sql_query)
                 # Retrieve all results of the query
                 results = cursor.fetchall()
-                return results
+                return results if results else []
         except MySQLError as e:
             logging.error(f"Errore nell'esecuzione della query: {e}")
             logging.error(traceback.format_exc())
-            return None
+            return []
         # The connection remains open as it is global in the sql.py module; do not close it here
     else:
         logging.error("Connessione al database non disponibile.")
-        return None
+        return []
 
 ## The following function retrieves the user language from the database
 

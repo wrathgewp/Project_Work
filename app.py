@@ -186,41 +186,29 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else: 
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
 
-@load_language
 ## Function to format articles
 def format_articles(articles):
-    if not articles:
-        return messages[user_language]["error_articles"]
-    
-    text=messages[user_language]["intro_articles"] 
-    # Loop through each article in the list
+    formatted = messages[user_language]["intro_articles"]
     for article in articles:
-        # Assume that the articles have 'title' and 'content' fields'
-        link = article.get('link', 'link non disponibile')
-        text += f"🔗 [{link}]({link})\n\n"
-    # If there are no articles, return a default message
-    return text
+        formatted += f"🔗 {article['link']}\n\n"
+    return formatted
+
 
 @load_language
-# Handler for articles button
-async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Call the function that retrieves the articles from the database
-    articles = sql.get_articles()
-    
-    if articles:
-        # Format the message with the results
-        formatted_message = format_articles(articles)
+async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    articles_data = sql.get_articles()
+    if articles_data:
+        formatted_message = format_articles(articles_data)
+        if update.message:
+            await update.message.reply_text(formatted_message)
+        elif update.callback_query:
+            await update.callback_query.answer()
+            await update.callback_query.message.reply_text(formatted_message)
     else:
-        # If there are no articles or there was an error, send an error message
-        formatted_message = "Non è stato possibile recuperare gli articoli."
-
-    # Send the message with the articles to the user
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
-        text=formatted_message, 
-        parse_mode='Markdown'  # Use Markdown to format the article titles in bold
-    )
-
+        if update.message:
+            await update.message.reply_text("No articles found.")
+        elif update.callback_query:
+            await update.callback_query.answer("No articles found.")
 
 ## Functions for document upload and processing
 
@@ -277,6 +265,7 @@ async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
         context.user_data['waiting_for_word'] = False
     
+
 # Handler per il comando /comuni
 async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Recupera l'elenco dei comuni dal database
@@ -501,9 +490,9 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start)
     syndicates_handler = CommandHandler('syndicates', syndicates)  # Nuovo handler per /syndicates
     comuni_handler = CommandHandler('comuni', comuni)
-    select_comune_handler = CallbackQueryHandler(select_comune)
+    #select_comune_handler = CallbackQueryHandler(select_comune)
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
-    functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
+    functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links|upload)$')
     word_definition_handler = CommandHandler('word_definition', word_definition)
     upload_handler = CommandHandler('upload', upload_command)
     file_upload_handler = MessageHandler(filters.Document.ALL, upload_document)
@@ -515,7 +504,7 @@ if __name__ == '__main__':
     application.add_handler(syndicates_handler)  # Aggiungi l'handler qui
     application.add_handler(button_handler)
     application.add_handler(comuni_handler)
-    application.add_handler(select_comune_handler)
+    #application.add_handler(select_comune_handler)
     application.add_handler(functionalities_handler)
     application.add_handler(word_definition_handler)
     application.add_handler(word_input_handler)
