@@ -6,6 +6,9 @@ from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHan
 import pymysql
 import sql
 from sql import get_articles
+import re
+from fuzzywuzzy import fuzz
+import string
 
 print("Starting bot.")
 
