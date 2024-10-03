@@ -7,6 +7,9 @@ from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHan
 import pymysql
 import sql
 from sql import get_articles
+from sql import get_syndicates
+#from sql import get_syndicates_by_comune
+from sql import get_available_comuni
 
 print("Starting bot.")
 
@@ -190,19 +193,112 @@ async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Optionally, remove the file after processing
         os.remove(file_path)
 
+# Handler per il comando /comuni
+async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Recupera l'elenco dei comuni dal database
+    comuni = get_available_comuni()
+
+    if comuni:
+        # Crea i pulsanti per ciascun comune
+        keyboard = [
+            [InlineKeyboardButton(comune, callback_data=comune)] for comune in comuni
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # Invia il messaggio con la tastiera
+        await update.message.reply_text("Seleziona il comune:", reply_markup=reply_markup)
+    else:
+        await update.message.reply_text("Nessun comune disponibile.")
+
+
+# Handler per gestire la selezione del comune
+async def select_comune(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    comune_selezionato = query.data  # Questo è il comune selezionato dall'utente
+    await query.answer()  # Rispondi al callback
+
+    # Recupera i sindacati per il comune selezionato
+    sindacati = sql.get_syndicates_by_comune(comune_selezionato)
+
+    if sindacati:
+        formatted_message = format_syndicates(sindacati)
+    else:
+        formatted_message = f"Nessun sindacato trovato per {comune_selezionato}."
+
+    # Invia i risultati filtrati
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=formatted_message,
+        parse_mode='Markdown'
+    )
+
+
+def format_syndicates(syndicates):
+    # Inizializza una stringa vuota per costruire il messaggio
+    formatted_message = ""
+
+    # Loop attraverso ogni sindacato nella lista
+    for syndicate in syndicates:
+        nome = syndicate.get('nome', 'Nome non disponibile')
+        indirizzo = syndicate.get('indirizzo', 'Indirizzo non disponibile')
+        cap = syndicate.get('cap', 'CAP non disponibile')
+        comune = syndicate.get('comune', 'Comune non disponibile')
+        num_telefono = syndicate.get('num_telefono', 'Numero di telefono non disponibile')
+        email = syndicate.get('email', 'Email non disponibile')
+        sito = syndicate.get('sito', 'Sito web non disponibile')
+
+        # Aggiungi le informazioni del sindacato al messaggio formattato
+        formatted_message += f"📌 *{nome}*\n"
+        formatted_message += f"📍 Indirizzo: {indirizzo}, {cap}, {comune}\n"
+        formatted_message += f"📞 Telefono: +39{num_telefono}\n"
+        formatted_message += f"✉️ Email: {email}\n"
+        formatted_message += f"🌐 Sito: {sito}\n"
+        formatted_message += "\n"
+
+    # Se non ci sono sindacati, ritorna un messaggio predefinito
+    return formatted_message if formatted_message else "Nessun sindacato trovato."
+
+
+# Handler per il comando /syndicates
+async def syndicates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Chiamata alla funzione che prende i sindacati dal database
+    syndicates = get_syndicates()
+
+    if syndicates:
+        # Formatta il messaggio con i risultati
+        formatted_message = format_syndicates(syndicates)
+    else:
+        # Se non ci sono sindacati o c'è stato un errore, invia un messaggio d'errore
+        formatted_message = "Non è stato possibile recuperare i sindacati."
+
+    # Invia il messaggio con i sindacati all'utente
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=formatted_message,
+        parse_mode='Markdown'  # Usa il Markdown per formattare il messaggio
+    )
+
+
+
 ## The following code will be executed when the bot receives a message
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_API).build()
 
     start_handler = CommandHandler('start', start)
+    syndicates_handler = CommandHandler('syndicates', syndicates)  # Nuovo handler per /syndicates
+    comuni_handler = CommandHandler('comuni', comuni)
+    select_comune_handler = CallbackQueryHandler(select_comune)
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
     functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
 
     application.add_handler(start_handler)
+    application.add_handler(syndicates_handler)  # Aggiungi l'handler qui
     application.add_handler(button_handler)
+    application.add_handler(comuni_handler)
+    application.add_handler(select_comune_handler)
     application.add_handler(functionalities_handler)
     application.add_handler(unknown_handler)
     
