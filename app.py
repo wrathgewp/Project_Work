@@ -166,7 +166,8 @@ async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT
     words_btn = InlineKeyboardButton("🔎", callback_data='words')
     unions_btn = InlineKeyboardButton("👥", callback_data='unions')
     links_btn = InlineKeyboardButton("🔗", callback_data='links')
-    keyboard_btn = [[words_btn, unions_btn, links_btn]]
+    upload_btn = InlineKeyboardButton("📄", callback_data='upload')
+    keyboard_btn = [[words_btn, unions_btn, links_btn, upload_btn]]
     reply_markup = InlineKeyboardMarkup(keyboard_btn)
 
     await context.bot.send_message(
@@ -427,6 +428,12 @@ def process_file(file_path, connection):
 
 # The following code will be executed when a file is uploaded by a user
 async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+    # Check if the user has initiated the upload process with the /upload command
+    if not context.user_data.get('upload_ready', False):
+        await update.message.reply_text("Please use the /upload command before sending a document.")
+        return
+
     document = update.message.document
 
     if document is not None:
@@ -470,6 +477,10 @@ async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             delete_file(file_path)
 
 
+async def upload_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Set a flag in user_data indicating the user is ready to upload a document
+    context.user_data['upload_ready'] = True
+    await update.message.reply_text("Please upload your document now.")
 
 
 ## This function is used to delete a file 
@@ -494,6 +505,8 @@ if __name__ == '__main__':
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
     functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
     word_definition_handler = CommandHandler('word_definition', word_definition)
+    upload_handler = CommandHandler('upload', upload_command)
+    file_upload_handler = MessageHandler(filters.Document.ALL, upload_document)
     word_input_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_word_input)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
@@ -507,6 +520,8 @@ if __name__ == '__main__':
     application.add_handler(word_definition_handler)
     application.add_handler(word_input_handler)
     application.add_handler(CallbackQueryHandler(set_user_language))
+    application.add_handler(upload_handler)
+    application.add_handler(file_upload_handler)
     application.add_handler(unknown_handler)
     
     application.run_polling()
