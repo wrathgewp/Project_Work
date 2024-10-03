@@ -167,8 +167,9 @@ async def functionalities_keyboard(update: Update, context: ContextTypes.DEFAULT
     words_btn = InlineKeyboardButton("🔎", callback_data='words')
     unions_btn = InlineKeyboardButton("👥", callback_data='unions')
     links_btn = InlineKeyboardButton("🔗", callback_data='links')
-    upload_btn = InlineKeyboardButton("📄", callback_data='upload')
-    keyboard_btn = [[words_btn, unions_btn, links_btn, upload_btn]]
+    #upload_btn = InlineKeyboardButton("📄", callback_data='upload')
+    #keyboard_btn = [[words_btn, unions_btn, links_btn, upload_btn]]
+    keyboard_btn = [[words_btn, unions_btn, links_btn]]
     reply_markup = InlineKeyboardMarkup(keyboard_btn)
 
     await context.bot.send_message(
