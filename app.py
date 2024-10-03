@@ -184,6 +184,8 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()    
     if query.data == 'links':
         await articles(update, context)
+    elif query.data == 'words':
+        await word_definition(update, context)
     else: 
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
 
