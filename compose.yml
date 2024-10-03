@@ -27,6 +27,9 @@ services:
       PORT: 3306
     links:
       - mariadb
+    volumes:
+      - telegram-bot-files:/app/downloads
 
 volumes:
   mariadb_data:
+  telegram-bot-files:
