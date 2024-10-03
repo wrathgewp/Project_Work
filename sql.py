@@ -136,19 +136,3 @@ def get_available_comuni():
         except MySQLError as e:
             logging.error(f"Errore nell'esecuzione della query: {e}")
             return []
-
-def get_database_terms():
-    #table_name = 'dizionario_it' if user_language == 'ita' else 'dizionario_eng'
-    
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                # Query per ottenere i termini e le definizioni dalla tabella corretta
-                cursor.execute(f"SELECT parola, descrizione FROM dizionario_it")
-                result = cursor.fetchall()
-                return [(row['parola'], row['descrizione']) for row in result]
-        except MySQLError as e:
-            logging.error(f"Errore nell'esecuzione della query: {e}")
-            return None
-    else:
-        return None

@@ -223,25 +223,6 @@ async def articles(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ## Functions for document upload and processing
 
-# Function to fetch terms from your database
-def get_database_terms():
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                # Query to fetch terms from the definitions table
-                cursor.execute("SELECT parola FROM dizionario_it")
-                result = cursor.fetchall()
-                # Fetch only the 'term' column
-                return [row['parola'] for row in result]
-        except MySQLError as e:
-            logging.error(f"Errore nell'esecuzione della query: {e}")
-            return None
-    else:
-        return None
-
-
-  
-
 # This function splits messages if they are too long
 def split_message(message, max_length=4096):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
