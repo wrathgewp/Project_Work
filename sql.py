@@ -1,16 +1,31 @@
 import logging
+import traceback
 from pymysql import MySQLError
 import pymysql.cursors
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-BOT_API = os.environ["BOT_API"]
-HOST_DB = os.environ["HOST_DB"]
-USER_DB = os.environ["USER_DB"]
-PASSWORD_DB = os.environ["PASSWORD_DB"]
-DATABASE = os.environ["DATABASE"]
-PORT = os.environ["PORT"]
+if os.path.exists(".env"):
+
+    load_dotenv()
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
+
+elif "HOST_DB" in os.environ:
+
+    HOST_DB = os.environ["HOST_DB"]
+    USER_DB = os.environ["USER_DB"]
+    PASSWORD_DB = os.environ["PASSWORD_DB"]
+    DATABASE = os.environ["DATABASE"]
+    PORT = os.environ["PORT"]
+
+else:
+    print("No .env file found, and no environment variables set for database. Exiting.")
+    exit(1)
+
 
 connection = pymysql.connect(host=HOST_DB,
                              user=USER_DB,
@@ -21,13 +36,19 @@ connection = pymysql.connect(host=HOST_DB,
 
 ## The following function retrieves the definition of a word from the database
         
-""" def get_dizionario(language_code):
+def get_word_definition(language_code, parola):
     table_name = f"dizionario_{language_code}"
+    parola = f"%{parola}%"
     with connection.cursor() as cursor:
-        query = f"SELECT parola, descrizione FROM {table_name} WHERE parola LIKE {parola}" 
-        cursor.execute(query)
+        query = f"SELECT parola, descrizione FROM {table_name} WHERE LOWER(parola) LIKE LOWER(%s)"
+        cursor.execute(query, (parola,))
         result = cursor.fetchall()
-        return result """
+        
+        if result:
+            return result
+        else:
+            return None
+
     
 ## The following function retrieves articles and link from the database
 
@@ -43,10 +64,34 @@ def get_articles():
                 return results
         except MySQLError as e:
             logging.error(f"Errore nell'esecuzione della query: {e}")
+            logging.error(traceback.format_exc())
             return None
         # The connection remains open as it is global in the sql.py module; do not close it here
     else:
+        logging.error("Connessione al database non disponibile.")
         return None
+
+## The following function retrieves the user language from the database
+
+def get_user_language(chat_id):
+    with connection.cursor() as cursor:
+        query = "SELECT lingua FROM lingua_utente WHERE chat_id = %s"
+        cursor.execute(query, (chat_id,))
+        result = cursor.fetchone()
+        
+        if result:
+            return result['lingua']
+        else:
+            return 'eng'  # Default language if not found
+
+## The following function saves the user language in the database
+
+def save_user_language(chat_id, language):
+    with connection.cursor() as cursor:
+        query = "INSERT INTO lingua_utente (chat_id, lingua) VALUES (%s, %s) ON DUPLICATE KEY UPDATE lingua = %s"
+        cursor.execute(query, (chat_id, language, language))
+    connection.commit()
+
     
 
 def get_syndicates():
