@@ -11,6 +11,7 @@ from sql import *
 import re
 from fuzzywuzzy import fuzz
 import string
+import fitz
 
 print("Starting bot.")
 
@@ -234,7 +235,16 @@ async def send_long_message(chat_id, text, context):
     for part in parts:
         await context.bot.send_message(chat_id=chat_id, text=part, parse_mode='Markdown')
 
+# Function to extract text from a PDF file
+def extract_text_from_pdf(pdf_path):
+    text = ""
+    with fitz.open(pdf_path) as pdf_document:
+        for page_num in range(pdf_document.page_count):
+            page = pdf_document[page_num]
+            text += page.get_text("text")  # Extract the text from each page
+    return text
 
+    
 ## The following code will be executed when the bot receives an unkown command
 
 @load_language
@@ -404,9 +414,19 @@ def process_file(file_path, connection):
     # Fetch the terms and definitions from the database
     database_terms = sql.get_database_terms()  # This should return a list of (term, definition) tuples
     
-    # Read the content of the file
-    with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
+    # Check file extension to determine if it's a .txt or .pdf file
+    file_extension = os.path.splitext(file_path)[1].lower()
+
+    if file_extension == '.txt':
+        # Read the content of the text file
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read()
+    elif file_extension == '.pdf':
+        # Extract text from the PDF file
+        text = extract_text_from_pdf(file_path)
+    else:
+        raise ValueError("Unsupported file format. Please upload a .txt or .pdf file.")
+
 
     # Basic text cleaning (removing punctuation and converting to lowercase)
     cleaned_text = text.translate(str.maketrans('', '', string.punctuation)).lower()
@@ -503,7 +523,7 @@ if __name__ == '__main__':
     comuni_handler = CommandHandler('comuni', comuni)
     select_comune_handler = CallbackQueryHandler(select_comune)
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
-    functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links)$')
+    functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links|upload)$')
     word_definition_handler = CommandHandler('word_definition', word_definition)
     upload_handler = CommandHandler('upload', upload_command)
     file_upload_handler = MessageHandler(filters.Document.ALL, upload_document)
