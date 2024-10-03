@@ -2,6 +2,8 @@
 
 FROM python:latest
 
+ENV UID=1000 GID=1000
+
 LABEL Maintainer="I quasi creativi"
 
 WORKDIR /app/telegram_bot
