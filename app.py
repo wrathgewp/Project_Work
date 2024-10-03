@@ -12,6 +12,8 @@ import re
 from fuzzywuzzy import fuzz
 import string
 import pymupdf
+from itertools import zip_longest
+
 
 print("Starting bot.")
 
@@ -298,8 +300,16 @@ async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Handler per il comando /comuni
 @load_language
 async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    available_comuni = sql.get_available_comuni()
-    keyboard = [[InlineKeyboardButton(comune, callback_data=f"comune:{comune}")] for comune in available_comuni]
+    available_comuni = sorted(sql.get_available_comuni())
+    
+    # Group communes into chunks of 3
+    grouped_comuni = list(zip_longest(*[iter(available_comuni)] * 3, fillvalue=None))
+    
+    keyboard = []
+    for group in grouped_comuni:
+        row = [InlineKeyboardButton(comune, callback_data=f"comune:{comune}") for comune in group if comune]
+        keyboard.append(row)
+    
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.message:
