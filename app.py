@@ -60,6 +60,10 @@ messages = {
         "nocommand": "Scusami, non ho capito il comando che hai inserito.",
         "intro_articles": "Ecco gli articoli disponibili: \n\n",
         "error_articles": "Articoli non disponibili",
+        "syndicates": "Ecco i sindacati disponibili nel comune di ",
+        "name":  "Nome",
+        "address": "Indirizzo",
+        "phone": "Telefono",
     },
     "eng": {
         "welcome": "Welcome! Please select your language.",
@@ -74,6 +78,10 @@ messages = {
         "nocommand": "Sorry, I didn't understand that command.",
         "intro_articles": "Here are the avaible artcles: \n\n",
         "error_articles": "Articles not available",
+        "syndicates": "Here are the syndicates available in the city of ",
+        "name":  "Name",
+        "address": "Address",
+        "phone": "Phone",
     }
 }
 
@@ -187,6 +195,8 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await articles(update, context)
     elif query.data == 'words':
         await word_definition(update, context)
+    elif query.data == 'unions':
+            await comuni(update, context)
     else: 
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
 
@@ -280,43 +290,38 @@ async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 
 # Handler per il comando /comuni
-async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Recupera l'elenco dei comuni dal database
-    comuni = get_available_comuni()
+async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    available_comuni = sql.get_available_comuni()
+    keyboard = [[InlineKeyboardButton(comune, callback_data=f"comune:{comune}")] for comune in available_comuni]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-    if comuni:
-        # Crea i pulsanti per ciascun comune
-        keyboard = [
-            [InlineKeyboardButton(comune, callback_data=comune)] for comune in comuni
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        # Invia il messaggio con la tastiera
+    if update.message:
         await update.message.reply_text("Seleziona il comune:", reply_markup=reply_markup)
-    else:
-        await update.message.reply_text("Nessun comune disponibile.")
+    elif update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.message.reply_text("Seleziona il comune:", reply_markup=reply_markup)
 
 
-# Handler per gestire la selezione del comune
-async def select_comune(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+async def select_comune(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    comune_selezionato = query.data  # Questo è il comune selezionato dall'utente
-    await query.answer()  # Rispondi al callback
-
-    # Recupera i sindacati per il comune selezionato
+    comune_selezionato = query.data.split(':')[1]
+    
     sindacati = sql.get_syndicates_by_comune(comune_selezionato)
-
+    
     if sindacati:
-        formatted_message = format_syndicates(sindacati)
+        message = f"{messages[user_language]['syndicates']} {comune_selezionato}:\n\n"
+        for sindacato in sindacati:
+            message += f"{messages[user_language]['name']}: {sindacato.get('nome', 'N/A')}\n"
+            message += f"{messages[user_language]['address']}: {sindacato.get('indirizzo', 'N/A')}\n"
+            message += f"{messages[user_language]['phone']}: {sindacato.get('telefono', 'N/A')}\n\n"
+        
+        await query.answer()
+        await query.message.reply_text(message)
     else:
-        formatted_message = f"Nessun sindacato trovato per {comune_selezionato}."
+        await query.answer(f"Nessun sindacato trovato per {comune_selezionato}")
 
-    # Invia i risultati filtrati
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=formatted_message,
-        parse_mode='Markdown'
-    )
+
 
 
 def format_syndicates(syndicates):
