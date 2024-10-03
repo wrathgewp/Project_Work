@@ -1,36 +1,32 @@
-#Deriving the latest base image of python
-
+# Use the latest Python base image
 FROM python:latest
 
+# Set the UID and GID environment variables to 1000.
 ENV UID=1000 GID=1000
 
 LABEL Maintainer="I quasi creativi"
 
+# Set the working directory
 WORKDIR /app/telegram_bot
 
-# This will copy the remote file at working directory in container
+# Copy the requirements file into the container
+COPY ./* /app/telegram_bot/
 
-COPY ./* /app/telegram_bot
-
+# Create standard user and group
 RUN groupadd -g ${GID} quasicreativi && \
-useradd -m -d /app -s /bin/bash -g quasicreativi -u ${UID} quasicreativi
+    useradd -m -d /app -s /bin/bash -g quasicreativi -u ${UID} quasicreativi
 
-RUN chown -R quasicreativi /app/telegram_bot
+# Create the app directory and set ownership to the quasicreativi user
+RUN mkdir -p /app/.local && chown -R quasicreativi:quasicreativi /app
 
-# Create the directory for downloaded files
-
-RUN mkdir -p /app/downloads
-
-RUN chown -R quasicreativi /app/downloads
-
-# Change the user
-
+# Switch to the quasicreativi user
 USER quasicreativi
 
-## This will install all the dependencies
+# Set the working directory
+RUN mkdir -p /app/downloads
 
+#Install the required packages
 RUN pip install --no-cache-dir -r /app/telegram_bot/requirements.txt
 
-## This will execute the code
-
+#Execute the app
 CMD [ "python", "-u", "app.py"]
