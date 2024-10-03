@@ -254,32 +254,6 @@ async def send_long_message(chat_id, text, context):
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["nocommand"])
 
-## The following code will be executed when a file is uploaded by a user
-
-@load_language
-async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    document = update.message.document
-    
-    if document is not None:
-        file_id = document.file_id
-        
-        # Get the file from Telegram servers
-        file = await context.bot.get_file(file_id)
-        
-        # Directory where files will be saved in the container
-        download_dir = "/app/downloads/"  # This path matches the container directory
-        file_path = os.path.join(download_dir, document.file_name)
-        
-        # Download the file to the mapped volume
-        await file.download_to_drive(file_path)
-        
-        await update.message.reply_text(f"File '{document.file_name}' received and downloaded. Processing...")
-        
-        # You can now process the file at file_path
-        #process_file(file_path)
-        
-        # Optionally, remove the file after processing
-        os.remove(file_path)
 
 
 """
@@ -400,6 +374,124 @@ async def syndicates(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=formatted_message,
         parse_mode='Markdown'  # Usa il Markdown per formattare il messaggio
     )
+
+
+## The following code will be executed when a file is uploaded by a user
+
+## Functions for document upload and processing
+
+## This function tokenizes the text word for word
+def tokenize_text(text):
+    tokens = re.findall(r'\b\w+\b', text.lower())
+    return tokens
+
+## This functions searches if terms that are in our database are also present in the document
+def find_matches_in_db(tokens, dizionario):
+    matching_terms = set()  # Use a set to avoid duplicates
+
+    # Normalize the terms in the database
+    normalized_terms = [(term.lower(), definition) for term, definition in dizionario]
+
+    for token in tokens:
+        if len(token) > 4:  # Ensure the token is long enough to modify
+            modified_token = token[:-1]  # Remove the last two letters
+        else:
+            continue  # Skip tokens that are too short
+
+        # Ensure modified token is at least 3 characters long
+        if len(modified_token) < 4:
+            continue
+
+        # Check if the modified token is contained in any term
+        for termine, definizione in normalized_terms:
+            if modified_token in termine:
+                print(f"Found match: '{modified_token}' in term: '{termine}'")  # Debug output
+                matching_terms.add((termine, definizione))  # Append the term and its definition
+                break  # Exit the loop once a match is found
+
+    return list(matching_terms)  # Convert the set back to a list for returning
+
+
+
+def process_file(file_path, connection):
+    # Fetch the terms and definitions from the database
+    database_terms = sql.get_database_terms()  # This should return a list of (term, definition) tuples
+    
+    # Read the content of the file
+    with open(file_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+
+    # Basic text cleaning (removing punctuation and converting to lowercase)
+    cleaned_text = text.translate(str.maketrans('', '', string.punctuation)).lower()
+
+    # Tokenize the cleaned text
+    tokens_in_file = tokenize_text(cleaned_text)
+
+    # Debug: Print the tokens found in the file
+    print(f"Tokens from file: {tokens_in_file}")
+
+    # Find matching terms in the database
+    matching_terms = find_matches_in_db(tokens_in_file, database_terms)
+
+    # Debug: Print the matching terms found
+    print(f"Matching terms found: {matching_terms}")
+
+    return matching_terms
+
+
+# The following code will be executed when a file is uploaded by a user
+async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    document = update.message.document
+
+    if document is not None:
+        file_id = document.file_id
+
+        # Get the file from Telegram servers
+        file = await context.bot.get_file(file_id)
+
+        # Directory where files will be saved
+        download_dir = "/home/andrea/Desktop/pw_ifts/download_test"  
+        file_path = os.path.join(download_dir, document.file_name)
+
+        # Download the file to the directory
+        await file.download_to_drive(file_path)
+
+        await update.message.reply_text(f"File '{document.file_name}' received and downloaded. Processing...")
+
+        try:
+            # Process the file and search for matching terms in the user's language
+            matching_terms = process_file(file_path, connection)
+
+            if matching_terms:
+                # Prepare the message with found terms
+                result_message = "Found terms:\n\n"
+                for term, definition in matching_terms:
+                    result_message += f"- {term}: {definition} \n"
+            else:
+                result_message = "No matching terms found in the document."
+
+            # Split and send the message if it's too long
+            messages = split_message(result_message)
+            for msg in messages:
+                await update.message.reply_text(msg)
+
+        except Exception as e:
+            logging.error(f"Error during file processing: {e}")
+            await update.message.reply_text("An error occurred during file processing.")
+        
+        finally:
+            # Remove the file after processing for privacy reasons
+            delete_file(file_path)
+
+
+
+
+## This function is used to delete a file 
+def delete_file(file_path):
+    try:
+        os.remove(file_path)
+    except OSError as e:
+        logging.error(f"Errore durante la cancellazione del file: {e}")
 
 
 
