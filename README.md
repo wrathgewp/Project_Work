@@ -110,7 +110,7 @@ Once the bot is running, you can interact with it through Telegram by sending `/
 
 ### Functions
 
-W.I.P. /comuni  /syndicates
+W.I.P.
 
 ### Supported Languages
 
@@ -157,7 +157,7 @@ Feel free to submit issues or pull requests if you would like to contribute to t
 
 ## License
 
-W.I.P.
+W.I.P. GPL 3.0
 
 ## Future Enhancements
 
