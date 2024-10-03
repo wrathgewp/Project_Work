@@ -61,9 +61,12 @@ messages = {
         "intro_articles": "Ecco gli articoli disponibili: \n\n",
         "error_articles": "Articoli non disponibili",
         "syndicates": "Ecco i sindacati disponibili nel comune di ",
-        "name":  "Nome",
-        "address": "Indirizzo",
-        "phone": "Telefono",
+        "name":  "📌 Nome",
+        "address": "📍 Indirizzo",
+        "phone": "📞 Telefono",
+        "other_buttons": "Altri pulsanti non implementati ancora.",
+        "select_municipality": "Seleziona il comune:",
+        "no_syndicates": "Non ci sono sindacati disponibili nel comune di ",
     },
     "eng": {
         "welcome": "Welcome! Please select your language.",
@@ -79,9 +82,12 @@ messages = {
         "intro_articles": "Here are the avaible artcles: \n\n",
         "error_articles": "Articles not available",
         "syndicates": "Here are the syndicates available in the city of ",
-        "name":  "Name",
-        "address": "Address",
-        "phone": "Phone",
+        "name":  "📌 Name",
+        "address": "📍 Address",
+        "phone": "📞 Phone",
+        "other_buttons": "Other buttons not implemented yet.",
+        "select_municipality": "Select the municipality:",
+        "no_syndicates": "There are no syndicates available in the city of ",
     }
 }
 
@@ -198,7 +204,7 @@ async def links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'unions':
             await comuni(update, context)
     else: 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Altri pulsanti non implementati ancora.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=messages[user_language]["other_buttons"])
 
 ## Function to format articles
 def format_articles(articles):
@@ -290,16 +296,17 @@ async def handle_word_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 
 # Handler per il comando /comuni
+@load_language
 async def comuni(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     available_comuni = sql.get_available_comuni()
     keyboard = [[InlineKeyboardButton(comune, callback_data=f"comune:{comune}")] for comune in available_comuni]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.message:
-        await update.message.reply_text("Seleziona il comune:", reply_markup=reply_markup)
+        await update.message.reply_text(messages[user_language]["select_municipality"], reply_markup=reply_markup)
     elif update.callback_query:
         await update.callback_query.answer()
-        await update.callback_query.message.reply_text("Seleziona il comune:", reply_markup=reply_markup)
+        await update.callback_query.message.reply_text(messages[user_language]["select_municipality"], reply_markup=reply_markup)
 
 
 
@@ -319,11 +326,11 @@ async def select_comune(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await query.answer()
         await query.message.reply_text(message)
     else:
-        await query.answer(f"Nessun sindacato trovato per {comune_selezionato}")
+        await query.answer(f"{messages[user_language]['no_syndicates']} {comune_selezionato}")
 
 
 
-
+@load_language
 def format_syndicates(syndicates):
     # Inizializza una stringa vuota per costruire il messaggio
     formatted_message = ""
