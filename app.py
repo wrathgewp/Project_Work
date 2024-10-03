@@ -510,8 +510,8 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start)
     syndicates_handler = CommandHandler('syndicates', syndicates)  # Nuovo handler per /syndicates
     comuni_handler = CommandHandler('comuni', comuni)
-    #select_comune_handler = CallbackQueryHandler(select_comune)
     button_handler = CallbackQueryHandler(language_button, pattern='^lang_')
+    select_comune_handler = CallbackQueryHandler(select_comune)
     functionalities_handler = CallbackQueryHandler(links, pattern='^(words|unions|links|upload)$')
     word_definition_handler = CommandHandler('word_definition', word_definition)
     upload_handler = CommandHandler('upload', upload_command)
@@ -524,8 +524,8 @@ if __name__ == '__main__':
     application.add_handler(syndicates_handler)  # Aggiungi l'handler qui
     application.add_handler(button_handler)
     application.add_handler(comuni_handler)
-    #application.add_handler(select_comune_handler)
     application.add_handler(functionalities_handler)
+    application.add_handler(select_comune_handler)
     application.add_handler(word_definition_handler)
     application.add_handler(word_input_handler)
     application.add_handler(CallbackQueryHandler(set_user_language))
