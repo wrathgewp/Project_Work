@@ -17,10 +17,15 @@ useradd -m -d /app -s /bin/bash -g quasicreativi -u ${UID} quasicreativi
 
 RUN chown -R quasicreativi /app/telegram_bot
 
-USER quasicreativi
-
 # Create the directory for downloaded files
+
 RUN mkdir -p /app/downloads
+
+RUN chown -R quasicreativi /app/downloads
+
+# Change the user
+
+USER quasicreativi
 
 ## This will install all the dependencies
 
