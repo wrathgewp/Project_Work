@@ -1,11 +1,13 @@
+from functools import wraps
+from multiprocessing import connection
 import os
 from dotenv import load_dotenv
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes, Updater, CallbackQueryHandler
-import pymysql
+from pymysql import MySQLError
 import sql
-from sql import get_articles
+from sql import *
 import re
 from fuzzywuzzy import fuzz
 import string
@@ -235,7 +237,7 @@ def get_database_terms():
             logging.error(f"Errore nell'esecuzione della query: {e}")
             return None
     else:
-        return none
+        return None
 
 
   
