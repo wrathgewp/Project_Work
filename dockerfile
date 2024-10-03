@@ -10,7 +10,7 @@ WORKDIR /app/telegram_bot
 
 # This will copy the remote file at working directory in container
 
-COPY ./* /usr/app/telegram_bot
+COPY ./* /app/telegram_bot
 
 RUN groupadd -g ${GID} quasicreativi && \
 useradd -m -d /app -s /bin/bash -g quasicreativi -u ${UID} quasicreativi
