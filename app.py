@@ -455,7 +455,7 @@ async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         file = await context.bot.get_file(file_id)
 
         # Directory where files will be saved
-        download_dir = "/home/andrea/Desktop/pw_ifts/download_test"  
+        download_dir = "/app/downloads"  
         file_path = os.path.join(download_dir, document.file_name)
 
         # Download the file to the directory
