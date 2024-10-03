@@ -11,7 +11,7 @@ from sql import *
 import re
 from fuzzywuzzy import fuzz
 import string
-import fitz
+import pymupdf
 
 print("Starting bot.")
 
@@ -226,7 +226,7 @@ async def send_long_message(chat_id, text, context):
 # Function to extract text from a PDF file
 def extract_text_from_pdf(pdf_path):
     text = ""
-    with fitz.open(pdf_path) as pdf_document:
+    with pymupdf.open(pdf_path) as pdf_document:
         for page_num in range(pdf_document.page_count):
             page = pdf_document[page_num]
             text += page.get_text("text")  # Extract the text from each page
@@ -401,7 +401,7 @@ def find_matches_in_db(tokens, dizionario):
 
 def process_file(file_path, connection):
     # Fetch the terms and definitions from the database
-    database_terms = sql.get_database_terms()  # This should return a list of (term, definition) tuples
+    database_terms = sql.get_word_definition()  # This should return a list of (term, definition) tuples
     
     # Check file extension to determine if it's a .txt or .pdf file
     file_extension = os.path.splitext(file_path)[1].lower()
@@ -452,7 +452,7 @@ async def upload_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         file = await context.bot.get_file(file_id)
 
         # Directory where files will be saved
-        download_dir = "/app/downloads"  
+        download_dir = "/home/andrea/Desktop/pw_ifts/download_test"  
         file_path = os.path.join(download_dir, document.file_name)
 
         # Download the file to the directory
