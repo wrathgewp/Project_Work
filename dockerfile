@@ -12,7 +12,7 @@ WORKDIR /app/telegram_bot
 
 COPY ./* /usr/app/telegram_bot
 
-RUN RUN groupadd -g ${GID} quasicreativi && \
+RUN groupadd -g ${GID} quasicreativi && \
 useradd -m -d /app -s /bin/bash -g quasicreativi -u ${UID} quasicreativi
 
 RUN chown -R quasicreativi /app/telegram_bot
