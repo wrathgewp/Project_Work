@@ -3,7 +3,6 @@
 ## Project Overview
 
 This project is a Telegram Bot written in Python that interacts with a MariaDB database to provide users with term definitions related to legal contracts and documents. Users can:
-Upload contracts or documents for analysis, where the bot identifies relevant terms and returns their definitions from the database.
 Directly access dictionaries without uploading files, retrieving terms and their definitions from either Italian or English dictionaries.
 View a list of labor unions offices and patronati del lavoro in the city of Verona for additional support or consultation.
 Switch languages between Italian and English for bot interaction and definitions.
@@ -16,11 +15,6 @@ The entire project is containerized using Docker, ensuring easy deployment and s
 
 ## Features
 
-- **User Uploads**: Users can upload contract documents directly through the Telegram bot.
-- **Text Extraction**: The bot reads and processes the text from the uploaded file.
-- **Term Matching**: Extracted words from the contract are matched against pre-defined lists of terms stored in two separate MariaDB tables (`dizionario_it` and `dizionario_en`).
-  - **`dizionario_ita`**: Contains Italian terms and their definitions in Italian.
-  - **`dizionario_eng`**: Contains Italian terms and their definitions in English.
 - **Dictionary Access**: Users can query the dictionary directly, without uploading any files.
 - **Useful Links**: The bot can provide links to articles or websites relevant to the user's inquiries.
 - **Labor Unions and Patronati Offices**: The bot can display a list of **sindacati** (labor unions) and **patronati** (social support offices) located in the city of Verona.
@@ -110,7 +104,7 @@ Once the bot is running, you can interact with it through Telegram by sending `/
 
 ### Functions
 
-W.I.P.
+
 
 ### Supported Languages
 
@@ -158,10 +152,3 @@ Feel free to submit issues or pull requests if you would like to contribute to t
 ## License
 
 W.I.P. GPL 3.0
-
-## Future Enhancements
-
-- Implement support for additional document formats (e.g., PDF, DOCX).
-- Add more sophisticated natural language processing (NLP) for term extraction (from spaCy to DistilBERT).
-- Improve matching algorithm for more accurate term extraction.
-- Integrate additional dictionaries or databases to broaden the range of terms and definitions available.
