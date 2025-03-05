@@ -1,4 +1,4 @@
-PyMuPDF==1.25.2
+PyMuPDF==1.25.3
 fuzzywuzzy==0.18.0
 PyMySQL==1.1.1
 python-dotenv==1.0.1
