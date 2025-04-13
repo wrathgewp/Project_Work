@@ -1,5 +1,5 @@
 PyMuPDF==1.25.5
 fuzzywuzzy==0.18.0
 PyMySQL==1.1.1
-python-dotenv==1.0.1
+python-dotenv==1.1.0
 python-telegram-bot==21.11.1
