@@ -2,4 +2,4 @@ PyMuPDF==1.27.1
 fuzzywuzzy==0.18.0
 PyMySQL==1.1.2
 python-dotenv==1.2.2
-python-telegram-bot==22.6
+python-telegram-bot==22.7
